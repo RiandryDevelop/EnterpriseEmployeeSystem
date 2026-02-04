@@ -1,4 +1,5 @@
-﻿using EES.Application.Employees.Commands;
+﻿using EES.Application.Common.Models;
+using EES.Application.Employees.Commands;
 using EES.Application.Employees.Queries;
 using Microsoft.AspNetCore.Mvc;
 

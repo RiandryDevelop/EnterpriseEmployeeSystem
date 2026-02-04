@@ -1,14 +1,14 @@
-﻿using EES.Domain.Entities;
-using EES.Infrastructure.Persistence;
+﻿using EES.Application.Common.Interfaces;
+using EES.Domain.Entities;
 using MediatR;
 
 namespace EES.Application.Employees.Commands;
 
 public class CreateEmployeeHandler : IRequestHandler<CreateEmployeeCommand, int>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
 
-    public CreateEmployeeHandler(ApplicationDbContext context) => _context = context;
+    public CreateEmployeeHandler(IApplicationDbContext context) => _context = context;
 
     public async Task<int> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
     {
