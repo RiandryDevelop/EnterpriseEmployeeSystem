@@ -2,5 +2,6 @@
 
 public interface IEmailService
 {
-    Task SendAlertAsync(string message); // 
+    // Method to send alert emails
+    Task SendAlertAsync(string message);  
 }

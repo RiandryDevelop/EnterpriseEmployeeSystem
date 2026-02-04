@@ -7,25 +7,34 @@ namespace EES.API.Controllers;
 
 public class EmployeesController : BaseApiController
 {
-    // GET: api/employees (Con paginación y filtrado)
+    // POST: api/employees (Create)
+    [HttpPost]
+    public async Task<ActionResult<int>> Create(CreateEmployeeCommand command)
+    {
+        return Ok(await Mediator.Send(command));
+    }
+    // GET: api/employees  (Read)
     [HttpGet]
     public async Task<ActionResult<PaginatedList<EmployeeDto>>> GetEmployees([FromQuery] GetEmployeesWithPaginationQuery query)
     {
         return Ok(await Mediator.Send(query));
     }
 
-    // POST: api/employees (Crear)
-    [HttpPost]
-    public async Task<ActionResult<int>> Create(CreateEmployeeCommand command)
+
+    // PUT: api/employees/{id} (Update)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, UpdateEmployeeCommand command)
     {
-        return Ok(await Mediator.Send(command));
+        if (id != command.Id) return BadRequest();
+        var success = await Mediator.Send(command);
+        return success ? NoContent() : NotFound();
     }
 
-    // GET: api/employees/test-error (Para probar la alerta de email 500)
-    [HttpGet("test-error")]
-    public IActionResult TestError()
+    // DELETE: api/employees/{id} (Delete)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
     {
-       // [cite_start]// Esto disparará nuestro ExceptionMiddleware y el EmailAlertService [cite: 12]
-        throw new Exception("Simulated enterprise-level system failure for notification testing.");
+        var success = await Mediator.Send(new DeleteEmployeeCommand(id));
+        return success ? NoContent() : NotFound();
     }
 }
