@@ -2,6 +2,7 @@
 
 public class Employee
 {
+    // Employee entity
     public int Id { get; set; }
     public string FirstName { get; set; } = string.Empty; 
 

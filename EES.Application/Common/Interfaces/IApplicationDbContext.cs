@@ -5,7 +5,9 @@ namespace EES.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
-    // DbSet permite realizar consultas LINQ que EF traduce a SQL
+    // Employees DbSet
     DbSet<Employee> Employees { get; }
+
+    // SaveChangesAsync method
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

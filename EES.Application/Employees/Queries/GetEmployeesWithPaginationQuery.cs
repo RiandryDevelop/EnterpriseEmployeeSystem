@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace EES.Application.Employees.Queries;
 
-// La petición (Request)
+//  (Request)
 public record GetEmployeesWithPaginationQuery : IRequest<PaginatedList<EmployeeDto>>
 {
     public int PageNumber { get; init; } = 1;
@@ -13,7 +13,7 @@ public record GetEmployeesWithPaginationQuery : IRequest<PaginatedList<EmployeeD
     public string? SearchTerm { get; init; }
 }
 
-// El ejecutor (Handler)
+//(Handler)
 public class GetEmployeesWithPaginationHandler : IRequestHandler<GetEmployeesWithPaginationQuery, PaginatedList<EmployeeDto>>
 {
     private readonly IApplicationDbContext _context;
@@ -27,7 +27,7 @@ public class GetEmployeesWithPaginationHandler : IRequestHandler<GetEmployeesWit
     {
         var query = _context.Employees.AsNoTracking();
 
-        // Aplicar filtro si existe
+        // Apply search filter if provided
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
             query = query.Where(e => e.FirstName.Contains(request.SearchTerm) ||
@@ -37,11 +37,12 @@ public class GetEmployeesWithPaginationHandler : IRequestHandler<GetEmployeesWit
 
         var count = await query.CountAsync(cancellationToken);
 
+        // Fetch paginated data
         var items = await query
             .OrderBy(e => e.LastName)
             .Skip((request.PageNumber - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(e => new EmployeeDto // Mapeo manual (o puedes usar AutoMapper más adelante)
+            .Select(e => new EmployeeDto
             {
                 Id = e.Id,
                 FullName = $"{e.FirstName} {e.LastName}",
