@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path="dotnet-ci.yml" />
+  </Folder>
   <Project Path="EES.API/EES.API.csproj" />
   <Project Path="EES.Application/EES.Application.csproj" />
   <Project Path="EES.Domain/EES.Domain.csproj" />
