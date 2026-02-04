@@ -1,11 +1,11 @@
 ﻿using EES.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace EES.Application.Common.Interfaces;
 
 public interface IApplicationDbContext
 {
-    ISet<Employee> Employees { get; }
+    // DbSet permite realizar consultas LINQ que EF traduce a SQL
+    DbSet<Employee> Employees { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

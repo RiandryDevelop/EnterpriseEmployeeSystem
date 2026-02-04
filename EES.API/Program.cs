@@ -1,9 +1,10 @@
 using EES.API.Middleware;
+using EES.Application.Common.Interfaces;
 using EES.Domain.Interfaces;
 using EES.Infrastructure.Persistence;
 using EES.Infrastructure.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.ApplicationInsights.AspNetCore;
+using Microsoft.EntityFrameworkCore;
 
 // Create a builder for the web application
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Dependency Injection for Email Service
 builder.Services.AddScoped<IEmailService, EmailAlertService>();
+// Dependency Injection for ApplicationDbContext interface
+builder.Services.AddScoped<IApplicationDbContext>(provider =>
+    provider.GetRequiredService<ApplicationDbContext>());
+// Dependency Injection for Employee Repository
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(EES.Application.Employees.Queries.EmployeeDto).Assembly));
 // Configure Application Insights
 builder.Services.AddApplicationInsightsTelemetry();
 
