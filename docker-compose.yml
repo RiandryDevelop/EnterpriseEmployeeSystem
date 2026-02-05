@@ -1,0 +1,25 @@
+services:
+  # Base de datos SQL Server
+  ees-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ees-sql-server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrongPassword!123
+    ports:
+      - "1433:1433"
+
+  # Tu API de .NET 8
+  ees-api:
+    image: ees-api-image
+    container_name: ees-api-container
+    build:
+      context: .
+      dockerfile: EES.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=ees-db;Database=EES_Db;User Id=sa;Password=YourStrongPassword!123;TrustServerCertificate=True
+    ports:
+      - "5000:8080"
+    depends_on:
+      - ees-db
