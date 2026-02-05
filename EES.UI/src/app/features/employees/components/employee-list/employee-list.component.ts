@@ -16,6 +16,7 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { EmployeeFormComponent } from '../employee-form/employee-form.component';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-employee-list',
@@ -28,6 +29,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     MatFormFieldModule, 
     MatIconModule,
     MatButtonModule,
+    MatSnackBarModule,
     MatDialogModule,
     MatDividerModule,
     MatTooltipModule
@@ -36,7 +38,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
   styleUrls: ['./employee-list.component.scss']
 })
 export class EmployeeListComponent implements OnInit {
-  displayedColumns: string[] = ['fullName', 'email', 'jobTitle', 'actions'];
+  displayedColumns: string[] = ['fullName', 'email', 'jobTitle', 'hireDate', 'actions'];
   dataSource: EmployeeDto[] = [];
   totalCount = 0;
   pageSize = 10;
@@ -48,7 +50,8 @@ export class EmployeeListComponent implements OnInit {
   // Fix 2: Inject MatDialog service in the constructor
   constructor(
     private employeeService: EmployeeService,
-    private dialog: MatDialog 
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {
     this.searchSubject.pipe(
       debounceTime(400),
@@ -78,7 +81,7 @@ export class EmployeeListComponent implements OnInit {
   openAddDialog(): void {
     const dialogRef = this.dialog.open(EmployeeFormComponent, {
       width: '500px',
-      disableClose: true // Good practice for forms
+      disableClose: true 
     });
 
     dialogRef.afterClosed().subscribe((result: CreateEmployeeCommand) => {
@@ -91,6 +94,34 @@ export class EmployeeListComponent implements OnInit {
     });
   }
 
+  openEditDialog(employee: EmployeeDto): void {
+  const dialogRef = this.dialog.open(EmployeeFormComponent, {
+    width: '550px',
+    disableClose: true,
+    data: { employee } 
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      const command = { 
+        ...result, 
+        id: employee.id 
+      };
+
+      this.employeeService.updateEmployee(employee.id, command).subscribe({
+        next: () => {
+          this.loadEmployees();
+          this.snackBar.open('Employee updated successfully', 'Close', { duration: 3000 });
+        },
+        error: (err) => {
+          const errorMessage = err.error || 'Update failed';
+          this.snackBar.open(errorMessage, 'Close', { duration: 5000 });
+          console.error('Update failed', err);
+        }
+      });
+    }
+  });
+}
   deleteEmployee(id: number): void {
     if (confirm('Are you sure you want to delete this employee?')) {
       this.employeeService.deleteEmployee(id).subscribe({

@@ -1,53 +1,58 @@
 <div class="form-container">
   <h2 mat-dialog-title class="form-header">
-    <mat-icon>person_add</mat-icon>
-    <span>Add New Employee</span>
+    <mat-icon>{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
+    <span>{{ isEditMode ? 'Update Employee' : 'Add New Employee' }}</span>
   </h2>
 
   <mat-dialog-content [formGroup]="employeeForm" class="form-content">
-    <p class="form-subtitle">Fill in the primary information for the new staff member.</p>
-
     <div class="form-grid">
+      
       <mat-form-field appearance="outline">
         <mat-label>First Name</mat-label>
         <input matInput formControlName="firstName" placeholder="e.g. John">
-        <mat-error *ngIf="employeeForm.get('firstName')?.hasError('required')">First name is required</mat-error>
+        <mat-error *ngIf="employeeForm.get('firstName')?.hasError('required')">First name is required.</mat-error>
+        <mat-error *ngIf="employeeForm.get('firstName')?.hasError('maxlength')">Name cannot exceed 50 characters.</mat-error>
+        <mat-error *ngIf="employeeForm.get('firstName')?.hasError('pattern')">Only letters and spaces are allowed.</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Last Name</mat-label>
         <input matInput formControlName="lastName" placeholder="e.g. Doe">
-        <mat-error *ngIf="employeeForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
+        <mat-error *ngIf="employeeForm.get('lastName')?.hasError('required')">Last name is required.</mat-error>
+        <mat-error *ngIf="employeeForm.get('lastName')?.hasError('maxlength')">Last name cannot exceed 50 characters.</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Email Address</mat-label>
-        <input matInput formControlName="email" type="email" placeholder="john.doe@enterprise.com">
+        <input matInput formControlName="email" type="email">
         <mat-icon matSuffix>email</mat-icon>
-        <mat-error *ngIf="employeeForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
+        <mat-error *ngIf="employeeForm.get('email')?.hasError('required')">Email is mandatory.</mat-error>
+        <mat-error *ngIf="employeeForm.get('email')?.hasError('pattern')">Enter a valid domain (e.g., user&#64;enterprise.com).</mat-error>
       </mat-form-field>
-
+      
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Job Title</mat-label>
-        <input matInput formControlName="jobTitle" placeholder="e.g. Senior Software Engineer">
-        <mat-icon matSuffix>work</mat-icon>
-      </mat-form-field>
+  <mat-label>Job Title</mat-label>
+  <input matInput formControlName="jobTitle" placeholder="e.g. Senior Developer">
+  <mat-icon matSuffix>work</mat-icon>
+  <mat-error *ngIf="employeeForm.get('jobTitle')?.hasError('required')">Job title is required.</mat-error>
+</mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Hire Date</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="hireDate">
-        <mat-hint>MM/DD/YYYY</mat-hint>
+        <input matInput [matDatepicker]="picker" formControlName="hireDate" [max]="today">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
+        <mat-error *ngIf="employeeForm.get('hireDate')?.hasError('required')">Please select a hire date.</mat-error>
+        <mat-error *ngIf="employeeForm.get('hireDate')?.hasError('futureDate')">Hire date cannot be in the future.</mat-error>
       </mat-form-field>
+
     </div>
   </mat-dialog-content>
 
   <mat-dialog-actions align="end" class="form-actions">
-    <button mat-button (click)="onCancel()" class="cancel-btn">Discard</button>
-    <button mat-flat-button color="primary" class="submit-btn" 
-            (click)="onSubmit()" [disabled]="employeeForm.invalid">
-      Create Employee
+    <button mat-button (click)="onCancel()">Discard</button>
+    <button mat-flat-button color="primary" (click)="onSubmit()" [disabled]="employeeForm.invalid">
+      {{ isEditMode ? 'Save Changes' : 'Create Employee' }}
     </button>
   </mat-dialog-actions>
 </div>

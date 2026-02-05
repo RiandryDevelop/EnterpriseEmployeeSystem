@@ -42,14 +42,25 @@
           <td mat-cell *matCellDef="let employee"> {{employee.jobTitle}} </td>
         </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef class="text-center"> Actions </th>
-          <td mat-cell *matCellDef="let employee" class="text-center">
-            <button mat-icon-button class="action-btn delete" (click)="deleteEmployee(employee.id)" matTooltip="Remove Employee">
-              <mat-icon>delete_outline</mat-icon>
-            </button>
-          </td>
-        </ng-container>
+        <ng-container matColumnDef="hireDate">
+      <th mat-header-cell *matHeaderCellDef> Hire Date </th>
+    <td mat-cell *matCellDef="let employee"> 
+    {{ employee.hireDate | date:'mediumDate' }} 
+    </td>
+  </ng-container>
+
+<ng-container matColumnDef="actions">
+  <th mat-header-cell *matHeaderCellDef class="text-center"> Actions </th>
+  <td mat-cell *matCellDef="let employee" class="text-center">
+    <button mat-icon-button class="action-btn edit" (click)="openEditDialog(employee)" matTooltip="Edit Employee">
+      <mat-icon color="primary">edit</mat-icon>
+    </button>
+
+    <button mat-icon-button class="action-btn delete" (click)="deleteEmployee(employee.id)" matTooltip="Remove Employee">
+      <mat-icon color="warn">delete_outline</mat-icon>
+    </button>
+  </td>
+</ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>

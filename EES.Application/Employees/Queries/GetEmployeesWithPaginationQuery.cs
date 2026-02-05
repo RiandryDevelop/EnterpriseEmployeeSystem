@@ -40,9 +40,14 @@ public class GetEmployeesWithPaginationHandler : IRequestHandler<GetEmployeesWit
         // Apply server-side search filter if a SearchTerm is provided
         if (!string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            query = query.Where(e => e.FirstName.Contains(request.SearchTerm) ||
-                                     e.LastName.Contains(request.SearchTerm) ||
-                                     e.Email.Contains(request.SearchTerm));
+            var search = request.SearchTerm.ToLower();
+
+            query = query.Where(e =>
+        e.FirstName.Contains(request.SearchTerm) ||
+        e.LastName.Contains(request.SearchTerm) ||
+        e.Email.Contains(request.SearchTerm) ||
+        e.JobTitle.Contains(request.SearchTerm) || 
+        e.HireDate.ToString().Contains(request.SearchTerm));
         }
 
         // Get the total count for pagination metadata before applying Skip/Take

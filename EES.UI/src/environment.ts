@@ -1,0 +1,1 @@
+export const apiUrl = 'https://localhost:7200/api/employees';
