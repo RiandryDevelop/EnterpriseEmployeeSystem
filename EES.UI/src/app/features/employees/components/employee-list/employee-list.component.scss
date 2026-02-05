@@ -1,0 +1,95 @@
+.page-container {
+  padding: 40px 20px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 1200px;
+  margin: 0 auto;
+  border: 1px solid #e2e8f0;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32px;
+
+  .main-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .subtitle {
+    color: #64748b;
+    margin: 4px 0 0 0;
+  }
+}
+
+.add-btn {
+  border-radius: 10px;
+  height: 48px;
+  padding: 0 24px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  
+  mat-icon { margin-right: 8px; }
+}
+
+.filter-section {
+  padding: 24px 32px;
+  .search-field { width: 100%; }
+}
+
+.table-container {
+  padding: 0 32px 32px 32px;
+}
+
+.modern-table {
+  width: 100%;
+  box-shadow: none !important;
+
+  th {
+    color: #64748b;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 16px;
+  }
+
+  .table-row {
+    transition: background 0.2s;
+    &:hover { background-color: #f1f5f9; cursor: pointer; }
+  }
+
+  td { padding: 16px; color: #334155; }
+}
+
+.chip-email {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.bold-text { font-weight: 600; }
+
+.action-btn.delete {
+  color: #ef4444;
+  &:hover { background-color: #fef2f2; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px;
+  color: #94a3b8;
+  mat-icon { font-size: 48px; height: 48px; width: 48px; }
+}
