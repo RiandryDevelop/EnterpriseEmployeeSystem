@@ -50,11 +50,12 @@ builder.Services.AddApplicationInsightsTelemetry();
 // Configure CORS Policy to enable Frontend integration (Angular/React) [cite: 4, 14]
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowAngularApp", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:4200") 
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -73,9 +74,12 @@ if (app.Environment.IsDevelopment())
 // Global Exception Handling Middleware (First in the pipeline to catch all errors) 
 app.UseMiddleware<ExceptionMiddleware>();
 
+// Routing Middleware 
+app.UseRouting();
+
 // Standard ASP.NET Core Middleware
+app.UseCors("AllowAngularApp"); // Essential for Frontend-Backend communication
 app.UseHttpsRedirection();
-app.UseCors("AllowAll"); // Essential for Frontend-Backend communication
 app.UseAuthorization();
 
 // Route mapping for Controllers

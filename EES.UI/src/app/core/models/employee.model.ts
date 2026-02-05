@@ -20,5 +20,9 @@ export interface CreateEmployeeCommand {
   lastName: string;
   email: string;
   jobTitle: string;
-  hireDate: string; // Formato ISO
+  hireDate: string; // ISO String
+}
+
+export interface UpdateEmployeeCommand extends CreateEmployeeCommand {
+  id: number;
 }
