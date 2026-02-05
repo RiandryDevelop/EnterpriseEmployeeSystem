@@ -5,6 +5,7 @@ using EES.Infrastructure.Persistence;
 using EES.Infrastructure.Services;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
 // Create a builder for the web application
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +36,8 @@ builder.Services.AddScoped<IApplicationDbContext>(provider =>
 // Dependency Injection for Employee Repository
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(EES.Application.Employees.Queries.EmployeeDto).Assembly));
+// Dependency Injection for FluentValidation validators
+builder.Services.AddValidatorsFromAssembly(typeof(EES.Application.Common.Interfaces.IApplicationDbContext).Assembly);
 // Configure Application Insights
 builder.Services.AddApplicationInsightsTelemetry();
 
