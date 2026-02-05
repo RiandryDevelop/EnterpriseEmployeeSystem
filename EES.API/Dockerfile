@@ -1,30 +1,50 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-# This stage is used when running from VS in fast mode (Default for Debug configuration)
+# -----------------------------------------------------------------------
+# STAGE 1: Base Runtime Environment
+# -----------------------------------------------------------------------
+# Using the optimized ASP.NET Core runtime image for the final execution
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER $APP_UID
 WORKDIR /app
+# Expose standard ports for web traffic
 EXPOSE 8080
 EXPOSE 8081
 
-
-# This stage is used to build the service project
+# -----------------------------------------------------------------------
+# STAGE 2: Build Environment
+# -----------------------------------------------------------------------
+# Using the full .NET SDK image to compile the source code
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+# Copy project files and restore dependencies separately to leverage Docker caching
 COPY ["EES.API/EES.API.csproj", "EES.API/"]
-RUN dotnet restore "./EES.API/EES.API.csproj"
+COPY ["EES.Application/EES.Application.csproj", "EES.Application/"]
+COPY ["EES.Domain/EES.Domain.csproj", "EES.Domain/"]
+COPY ["EES.Infrastructure/EES.Infrastructure.csproj", "EES.Infrastructure/"]
+
+# Perform a restore of the NuGet packages
+RUN dotnet restore "EES.API/EES.API.csproj"
+
+# Copy the remaining source files and build the application
 COPY . .
 WORKDIR "/src/EES.API"
-RUN dotnet build "./EES.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "EES.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-# This stage is used to publish the service project to be copied to the final stage
+# -----------------------------------------------------------------------
+# STAGE 3: Publish
+# -----------------------------------------------------------------------
+# Prepare the binaries for deployment by stripping unnecessary debug files
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./EES.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "EES.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-# This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
+# -----------------------------------------------------------------------
+# STAGE 4: Final Production Image
+# -----------------------------------------------------------------------
+# Copy only the published output from the publish stage to the base runtime image
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Define the entry point for the container execution
 ENTRYPOINT ["dotnet", "EES.API.dll"]
