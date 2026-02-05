@@ -1,11 +1,13 @@
 using EES.API.Middleware;
+using EES.Application.Common.Behaviors;
 using EES.Application.Common.Interfaces;
 using EES.Domain.Interfaces;
 using EES.Infrastructure.Persistence;
 using EES.Infrastructure.Services;
+using FluentValidation;
+using MediatR;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.EntityFrameworkCore;
-using FluentValidation;
 
 // Create a builder for the web application
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,8 @@ builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(EES.Application.Employees.Queries.EmployeeDto).Assembly));
 // Dependency Injection for FluentValidation validators
 builder.Services.AddValidatorsFromAssembly(typeof(EES.Application.Common.Interfaces.IApplicationDbContext).Assembly);
+// Add Validation Behavior to MediatR pipeline
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 // Configure Application Insights
 builder.Services.AddApplicationInsightsTelemetry();
 
