@@ -26,16 +26,20 @@ public class ExceptionMiddleware
         }
         catch (Exception ex)
         {
-            if (ex is FluentValidation.ValidationException validationEx)
+            // 1. Handle Validation Errors (Don't alert tech team)
+            if (ex is FluentValidation.ValidationException valEx)
             {
                 context.Response.StatusCode = StatusCodes.Status400BadRequest;
-                var errors = validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
-                await context.Response.WriteAsJsonAsync(new { Title = "Validation Failed", Errors = errors });
+                var errors = valEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+                await context.Response.WriteAsJsonAsync(new { Title = "Validation Error", Errors = errors });
             }
-
-            _logger.LogError(ex, "An unhandled exception occurred."); 
-            await emailService.SendAlertAsync(ex.Message);         
-            await HandleExceptionAsync(context);
+            // 2. Handle System Errors (Trigger Email Alert)
+            else
+            {
+                await emailService.SendAlertAsync(ex.Message); // Only send alert for real 500 errors [cite: 12]
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new { Title = "Internal Server Error", Message = "A technical error occurred." });
+            }
         }
     }
 
