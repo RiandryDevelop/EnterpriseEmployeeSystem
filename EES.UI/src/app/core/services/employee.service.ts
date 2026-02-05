@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { EmployeeDto, PaginatedList, CreateEmployeeCommand, UpdateEmployeeCommand } from '../models/employee.model';
-import { apiUrl } from '../../../environment';
+import { environment } from '../../../environments/environment';
 
 /**
  * Service responsible for managing employee-related data operations.
@@ -12,6 +12,7 @@ import { apiUrl } from '../../../environment';
   providedIn: 'root'
 })
 export class EmployeeService {
+  private readonly endpoint = `${environment.apiUrl}/employees`;
 
   constructor(private http: HttpClient) { }
 
@@ -21,7 +22,7 @@ export class EmployeeService {
    * @returns An Observable containing the ID of the newly created employee.
    */
   createEmployee(employee: CreateEmployeeCommand): Observable<number> {
-    return this.http.post<number>(apiUrl, employee);
+    return this.http.post<number>(this.endpoint, employee);
   }
 
   /**
@@ -40,7 +41,7 @@ export class EmployeeService {
       params = params.set('searchTerm', searchTerm);
     }
 
-    return this.http.get<PaginatedList<EmployeeDto>>(apiUrl, { params });
+    return this.http.get<PaginatedList<EmployeeDto>>(this.endpoint, { params });
   }
 
   /**
@@ -51,7 +52,7 @@ export class EmployeeService {
    */
   updateEmployee(id: number, command: UpdateEmployeeCommand): Observable<void> {
     // Ensures the request is sent to the specific resource URL: /api/employees/{id}
-    return this.http.put<void>(`${apiUrl}/${id}`, command);
+    return this.http.put<void>(`${this.endpoint}/${id}`, command);
   }
 
   /**
@@ -60,6 +61,6 @@ export class EmployeeService {
    * @returns An Observable that completes upon successful deletion.
    */
   deleteEmployee(id: number): Observable<void> {
-    return this.http.delete<void>(`${apiUrl}/${id}`);
+    return this.http.delete<void>(`${this.endpoint}/${id}`);
   }
 }
