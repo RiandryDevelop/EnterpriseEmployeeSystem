@@ -42,20 +42,18 @@ jobs:
         node-version: 18
 
     # Create the environment file so the build doesn't fail due to missing files
-    - name: Generate Environment File for Build
+    - name: Generate Environment Files
       run: |
         mkdir -p EES.UI/src/environments
+        # Create the production file dynamically
         echo "export const environment = { 
           production: true, 
           apiUrl: '${{ secrets.API_URL }}', 
           appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
         };" > EES.UI/src/environments/environment.prod.ts
-
-    - name: Install & Build Frontend
-      run: |
-        cd EES.UI 
-        npm install
-        npm run build --configuration=production
+        
+        # Create a dummy development file to satisfy the Angular compiler
+        echo "export const environment = { production: false, apiUrl: 'http://localhost:7200/api' };" > EES.UI/src/environments/environment.ts
 
   # --- PRODUCTION DEPLOYMENT ---
   # Unified deployment job for Backend (App Service) and Frontend (SWA)
