@@ -6,63 +6,80 @@ using EES.Infrastructure.Persistence;
 using EES.Infrastructure.Services;
 using FluentValidation;
 using MediatR;
-using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.EntityFrameworkCore;
 
-// Create a builder for the web application
+// Initialize the web application builder
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------- Add services to the container. -------------------
+// -----------------------------------------------------------
+// 1. SERVICE CONFIGURATION (Dependency Injection)
+// -----------------------------------------------------------
 
-
-// Add controllers to the services collection
+// Register Controller services to handle incoming HTTP requests [cite: 8]
 builder.Services.AddControllers();
 
-// Add Swagger for API documentation
+// Configure Swagger/OpenAPI for API documentation and testing
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-// Get the connection string from configuration
+// Configure Data Persistence using EF Core and SQL Server 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Configure DbContext with SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
-// Dependency Injection for Email Service
-builder.Services.AddScoped<IEmailService, EmailAlertService>();
-// Dependency Injection for ApplicationDbContext interface
+// Register Application Interfaces for Dependency Injection
 builder.Services.AddScoped<IApplicationDbContext>(provider =>
     provider.GetRequiredService<ApplicationDbContext>());
-// Dependency Injection for Employee Repository
+
+// Register the Notification Service (Email Alert System) [cite: 12, 13]
+builder.Services.AddScoped<IEmailService, EmailAlertService>();
+
+// Configure MediatR for Command/Query separation
 builder.Services.AddMediatR(cfg =>
     cfg.RegisterServicesFromAssembly(typeof(EES.Application.Employees.Queries.EmployeeDto).Assembly));
-// Dependency Injection for FluentValidation validators
+
+// Register FluentValidation validators from the Application layer
 builder.Services.AddValidatorsFromAssembly(typeof(EES.Application.Common.Interfaces.IApplicationDbContext).Assembly);
-// Add Validation Behavior to MediatR pipeline
+
+// Register Cross-Cutting Concerns: Validation Pipeline Behavior
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
-// Configure Application Insights
+
+// Integrate Azure Application Insights for Telemetry and Observability 
 builder.Services.AddApplicationInsightsTelemetry();
 
-// ------------- Build the application. -------------------
+// Configure CORS Policy to enable Frontend integration (Angular/React) [cite: 4, 14]
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// -----------------------------------------------------------
+// 2. HTTP REQUEST PIPELINE (Middleware)
+// -----------------------------------------------------------
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Enable Swagger UI only in Development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Enforce HTTPS redirection
-app.UseHttpsRedirection();
-// Enable authorization middleware
-app.UseAuthorization();
-// Use custom exception handling middleware
+// Global Exception Handling Middleware (First in the pipeline to catch all errors) 
 app.UseMiddleware<ExceptionMiddleware>();
-// Map controller routes
+
+// Standard ASP.NET Core Middleware
+app.UseHttpsRedirection();
+app.UseCors("AllowAll"); // Essential for Frontend-Backend communication
+app.UseAuthorization();
+
+// Route mapping for Controllers
 app.MapControllers();
 
-// Run the application
+// Execute the application
 app.Run();
