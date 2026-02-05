@@ -29,8 +29,7 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
 
-  # --- FRONTEND QUALITY GATE ---
-  # Validates Angular build process
+ # --- FRONTEND QUALITY GATE ---
   frontend-build:
     name: Angular Build
     runs-on: ubuntu-latest
@@ -41,6 +40,16 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: 18
+
+    # Create the environment file so the build doesn't fail due to missing files
+    - name: Generate Environment File for Build
+      run: |
+        mkdir -p EES.UI/src/environments
+        echo "export const environment = { 
+          production: true, 
+          apiUrl: '${{ secrets.API_URL }}', 
+          appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
+        };" > EES.UI/src/environments/environment.prod.ts
 
     - name: Install & Build Frontend
       run: |
