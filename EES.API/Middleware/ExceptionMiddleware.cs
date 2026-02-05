@@ -1,4 +1,5 @@
 ﻿using EES.Domain.Interfaces;
+using System;
 using System.Net;
 
 namespace EES.API.Middleware;
@@ -25,6 +26,13 @@ public class ExceptionMiddleware
         }
         catch (Exception ex)
         {
+            if (ex is FluentValidation.ValidationException validationEx)
+            {
+                context.Response.StatusCode = StatusCodes.Status400BadRequest;
+                var errors = validationEx.Errors.Select(e => new { e.PropertyName, e.ErrorMessage });
+                await context.Response.WriteAsJsonAsync(new { Title = "Validation Failed", Errors = errors });
+            }
+
             _logger.LogError(ex, "An unhandled exception occurred."); 
             await emailService.SendAlertAsync(ex.Message);         
             await HandleExceptionAsync(context);
