@@ -1,9 +1,7 @@
-using EES.API.Middleware;
 using EES.Application.Common.Behaviors;
 using EES.Application.Common.Interfaces;
-using EES.Domain.Interfaces;
+using EES.Infrastructure.Notifications;
 using EES.Infrastructure.Persistence;
-using EES.Infrastructure.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +30,7 @@ builder.Services.AddScoped<IApplicationDbContext>(provider =>
     provider.GetRequiredService<ApplicationDbContext>());
 
 // Register the Notification Service (Email Alert System) [cite: 12, 13]
-builder.Services.AddScoped<IEmailService, EmailAlertService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // Configure MediatR for Command/Query separation
 builder.Services.AddMediatR(cfg =>
@@ -45,7 +43,10 @@ builder.Services.AddValidatorsFromAssembly(typeof(EES.Application.Common.Interfa
 builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 // Integrate Azure Application Insights for Telemetry and Observability 
-builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.AddApplicationInsightsTelemetry(options =>
+{
+    options.ConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+});
 
 // Configure CORS Policy to enable Frontend integration (Angular/React) [cite: 4, 14]
 builder.Services.AddCors(options =>

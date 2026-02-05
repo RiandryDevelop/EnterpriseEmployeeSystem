@@ -1,1 +1,4 @@
-export const apiUrl = 'https://localhost:7200/api/employees';
+export const environment = {
+  production: false,
+  apiUrl: 'https://localhost:7200/api'
+};

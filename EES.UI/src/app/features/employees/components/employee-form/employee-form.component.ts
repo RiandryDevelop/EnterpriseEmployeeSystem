@@ -10,7 +10,10 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { EmployeeDto } from '../../../../core/models/employee.model';
 
-
+/**
+ * Dialog component for adding or editing employee details.
+ * Utilizes Reactive Forms for robust validation and data handling.
+ */
 @Component({
   selector: 'app-employee-form',
   standalone: true,
@@ -29,27 +32,51 @@ import { EmployeeDto } from '../../../../core/models/employee.model';
   styleUrl: './employee-form.component.scss'
 })
 export class EmployeeFormComponent implements OnInit {
+  /** The main form group for employee data */
   employeeForm!: FormGroup;
+  
+  /** Reference for max date validation in the template */
   today = new Date();
+  
+  /** Flag to determine if we are creating a new record or updating an existing one */
   isEditMode: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<EmployeeFormComponent>,
+    /** Injected data from the calling component, containing employee details for edit mode */
     @Inject(MAT_DIALOG_DATA) public data: {employee: EmployeeDto}
   ) {
     this.isEditMode = !!data?.employee;
   }
-ngOnInit(): void {
-  this.employeeForm = this.fb.group({
-    firstName: ['', [Validators.required, Validators.maxLength(50), Validators.pattern('^[a-zA-Z ]*$')]],
-    lastName: ['', [Validators.required, Validators.maxLength(50)]],
-    email: ['', [Validators.required, Validators.pattern('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')]],
-    jobTitle: ['', [Validators.required, Validators.maxLength(100)]],
-    hireDate: [new Date(), [Validators.required, this.futureDateValidator]]
-  });
 
-  if (this.isEditMode && this.data.employee) {
+  ngOnInit(): void {
+    this.initForm();
+
+    /** If in edit mode, populate the form with existing data */
+    if (this.isEditMode && this.data.employee) {
+      this.populateForm();
+    }
+  }
+
+  /**
+   * Initializes the reactive form structure with validators.
+   */
+  private initForm(): void {
+    this.employeeForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.maxLength(50), Validators.pattern('^[a-zA-Z ]*$')]],
+      lastName: ['', [Validators.required, Validators.maxLength(50)]],
+      email: ['', [Validators.required, Validators.pattern('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')]],
+      jobTitle: ['', [Validators.required, Validators.maxLength(100)]],
+      hireDate: [new Date(), [Validators.required, this.futureDateValidator]]
+    });
+  }
+
+  /**
+   * Patches the form values and handles UI logic for editing.
+   */
+  private populateForm(): void {
+    // Split full name into first and last name for the specific form fields
     const names = this.data.employee.fullName.split(' ');
     this.employeeForm.patchValue({
       firstName: names[0] || '',
@@ -59,25 +86,39 @@ ngOnInit(): void {
       hireDate: this.data.employee.hireDate
     });
     
+    // Prevent email changes during edit mode to maintain data integrity
     this.employeeForm.get('email')?.disable();
   }
-}
-futureDateValidator(control: AbstractControl): ValidationErrors | null {
-  if (!control.value) return null;
 
-  const selectedDate = new Date(control.value);
-  selectedDate.setHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return selectedDate > today ? { futureDate: true } : null;
-}
+  /**
+   * Custom validator to ensure selected hire dates are not in the future.
+   * Compares dates at midnight to correctly include the current day.
+   */
+  futureDateValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
 
-onSubmit(): void {
+    const selectedDate = new Date(control.value);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return selectedDate > today ? { futureDate: true } : null;
+  }
+
+  /**
+   * Finalizes the form submission.
+   * Returns raw value to include disabled fields (like email).
+   */
+  onSubmit(): void {
     if (this.employeeForm.valid) {
       this.dialogRef.close(this.employeeForm.getRawValue());
     }
   }
 
+  /**
+   * Closes the dialog without saving changes.
+   */
   onCancel(): void {
     this.dialogRef.close();
   }
