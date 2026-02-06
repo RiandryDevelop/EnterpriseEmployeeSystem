@@ -103,5 +103,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/EES.UI" # Angular project subfolder
-          output_location: "dist/ees-ui" # Must match 'outputPath' in your angular.json
+          output_location: "EES.UI/dist/ees-ui" # Must match 'outputPath' in your angular.json
           app_build_command: "npm run build -- --configuration=production"
