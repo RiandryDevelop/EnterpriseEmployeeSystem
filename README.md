@@ -29,7 +29,7 @@ This is a comprehensive FullStack application designed to manage corporate workf
    dotnet restore
    dotnet run
 2. **Frontend:**
-``bash
+```bash
 cd EES.UI
 npm install
 ng serve
