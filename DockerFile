@@ -21,6 +21,5 @@ RUN dotnet publish "EES.API.csproj" -c Release -o /app/publish /p:UseAppHost=fal
 # Stage 3: Final runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-# Corregido: --from=publish
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "EES.API.dll"]
