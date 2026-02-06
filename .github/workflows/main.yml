@@ -52,18 +52,6 @@ jobs:
       with:
         node-version: 18
 
-    # Secrets Management: Dynamically generate environment files to avoid hardcoding secrets.
-    - name: Generate Environment Files
-      run: |
-        mkdir -p EES.UI/src/environments
-        echo "export const environment = { 
-          production: true, 
-          apiUrl: '${{ secrets.API_URL }}', 
-          appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
-        };" > EES.UI/src/environments/environment.prod.ts
-        
-        echo "export const environment = { production: false, apiUrl: 'http://localhost:7200/api' };" > EES.UI/src/environments/environment.ts
-
     - name: Install & Build Check
       run: |
         cd EES.UI
@@ -101,17 +89,29 @@ jobs:
           app-name: 'app-ees-api'
           package: ./backend-package
 
-      # 4. Frontend Secrets Injection: Re-create environment file for the SWA build container.
-      - name: Generate Frontend Environment File
+      # 4. SECRETS MANAGEMENT: Kill Localhost references
+      # We overwrite BOTH environment files. This ensures that even if the 
+      # Angular build defaults to environment.ts, it uses the Production URL.
+      - name: Generate Frontend Environment Files
         run: |
           mkdir -p EES.UI/src/environments
+          
+          # Create Production environment file
           echo "export const environment = { 
             production: true, 
             apiUrl: '${{ secrets.API_URL }}', 
             appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
           };" > EES.UI/src/environments/environment.prod.ts
 
+          # Overwrite default environment file (Fixes localhost:7200 issues)
+          echo "export const environment = { 
+            production: true, 
+            apiUrl: '${{ secrets.API_URL }}', 
+            appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
+          };" > EES.UI/src/environments/environment.ts
+
       # 5. Frontend Deployment: Deploy to Azure SWA with corrected output paths.
+      # Note: 'output_location' includes /browser, standard for Angular 17+
       - name: Deploy Frontend to Azure SWA
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -119,6 +119,8 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "/EES.UI" 
-          # Fix: Path is relative to app_location; ees.ui matches your project naming.
           output_location: "dist/ees.ui/browser" 
-          app_build_command: "npm run build -- --configuration=production"
+          app_build_command: "npm install && npm run build -- --configuration=production"
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          APP_INSIGHTS_KEY: ${{ secrets.APP_INSIGHTS_KEY }}
