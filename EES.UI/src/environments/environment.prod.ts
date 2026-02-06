@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://app-ees-api.azurewebsites.net/api',
+  apiUrl: 'API_URL_PLACEHOLDER',
   appInsightsKey: 'APP_INSIGHTS_KEY_PLACEHOLDER'   
 };
