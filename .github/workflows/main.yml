@@ -2,14 +2,13 @@ name: Enterprise CI/CD Pipeline
 
 on:
   push:
-    # Adjusted to include 'master' as seen in your Azure SWA configuration
     branches: [ master, main, develop ]
   pull_request:
     branches: [ master, main, develop ]
 
 jobs:
   # --- BACKEND QUALITY GATE ---
-  # Ensures .NET 8 Web API integrity before deployment
+  # Builds and tests the .NET 8 Web API to ensure business logic integrity.
   backend-build:
     name: .NET Build & Test
     runs-on: ubuntu-latest
@@ -26,10 +25,22 @@ jobs:
         dotnet restore
         dotnet build --configuration Release --no-restore
 
-    - name: Test
+    - name: Run Unit Tests
       run: dotnet test --no-build --verbosity normal
 
- # --- FRONTEND QUALITY GATE ---
+    # Optimization: Package the API into a clean directory for deployment
+    - name: Dotnet Publish
+      run: dotnet publish EES.API/EES.API.csproj -c Release -o ./publish
+
+    # Senior Practice: Upload the published files as an artifact
+    - name: Upload Backend Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-dist
+        path: ./publish
+
+  # --- FRONTEND QUALITY GATE ---
+  # Validates the Angular application and ensures environment protection.
   frontend-build:
     name: Angular Build
     runs-on: ubuntu-latest
@@ -41,35 +52,56 @@ jobs:
       with:
         node-version: 18
 
-    # Create the environment file so the build doesn't fail due to missing files
+    # Secrets Management: Dynamically generate environment files to avoid hardcoding secrets.
     - name: Generate Environment Files
       run: |
         mkdir -p EES.UI/src/environments
-        # Create the production file dynamically
         echo "export const environment = { 
           production: true, 
           apiUrl: '${{ secrets.API_URL }}', 
           appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
         };" > EES.UI/src/environments/environment.prod.ts
         
-        # Create a dummy development file to satisfy the Angular compiler
         echo "export const environment = { production: false, apiUrl: 'http://localhost:7200/api' };" > EES.UI/src/environments/environment.ts
 
+    - name: Install & Build Check
+      run: |
+        cd EES.UI
+        npm install
+        npm run build --configuration=production
+
   # --- PRODUCTION DEPLOYMENT ---
-  # Unified deployment job for Backend (App Service) and Frontend (SWA)
+  # Consolidated job to deploy to Azure App Service and Azure Static Web Apps.
   deploy-to-azure:
     name: Production Deploy
     needs: [backend-build, frontend-build]
-    # Restrict deployment to your production branches (master/main)
     if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      # 1. SECRETS MANAGEMENT: Dynamic Environment Injection
-      # Securely creates the environment file using GitHub Secrets
-      # This satisfies the "No Hardcoded Credentials" requirement.
+      # 1. Infrastructure Access: Authenticate using Service Principal JSON.
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 2. Artifact Retrieval: Fetch the pre-compiled backend files.
+      - name: Download Backend Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-dist
+          path: ./backend-package
+
+      # 3. Backend Deployment: Push only the published binaries to App Service.
+      - name: Deploy Backend to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'app-ees-api'
+          package: ./backend-package
+
+      # 4. Frontend Secrets Injection: Re-create environment file for the SWA build container.
       - name: Generate Frontend Environment File
         run: |
           mkdir -p EES.UI/src/environments
@@ -79,29 +111,14 @@ jobs:
             appInsightsKey: '${{ secrets.APP_INSIGHTS_KEY }}' 
           };" > EES.UI/src/environments/environment.prod.ts
 
-      # 2. INFRASTRUCTURE ACCESS: Azure Login
-      # Uses the Service Principal credentials stored in GitHub
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      # 3. BACKEND DEPLOYMENT: Azure App Service
-      # Deploys the .NET 8 API to the 'app-ees-api' resource
-      - name: Deploy Backend to Azure App Service
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'app-ees-api'
-          package: .
-
-      # 4. FRONTEND DEPLOYMENT: Azure Static Web App (SWA)
-      # Deploys the Angular app using the implementation token from Azure
+      # 5. Frontend Deployment: Deploy to Azure SWA with corrected output paths.
       - name: Deploy Frontend to Azure SWA
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/EES.UI" # Angular project subfolder
-          output_location: "EES.UI/dist/ees.ui" # Must match 'outputPath' in your angular.json
+          app_location: "/EES.UI" 
+          # Fix: Path is relative to app_location; ees.ui matches your project naming.
+          output_location: "dist/ees.ui" 
           app_build_command: "npm run build -- --configuration=production"
