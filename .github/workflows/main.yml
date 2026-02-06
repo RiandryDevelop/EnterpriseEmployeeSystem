@@ -120,5 +120,5 @@ jobs:
           action: "upload"
           app_location: "/EES.UI" 
           # Fix: Path is relative to app_location; ees.ui matches your project naming.
-          output_location: "dist/ees.ui" 
+          output_location: "dist/ees.ui/browser" 
           app_build_command: "npm run build -- --configuration=production"
